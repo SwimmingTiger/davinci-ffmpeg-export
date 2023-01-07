@@ -21,7 +21,7 @@ define('FFMPEG', 'ffmpeg');
 define('WSLPATH', '/usr/bin/wslpath');
 
 # 临时文件夹路径
-define('TMP_DIR', '.');
+define('TMP_DIR', realpath('./tmp'));
 
 function usage()
 {
@@ -40,6 +40,10 @@ $pid = getmypid();
 
 if (!is_file($xml)) {
     usage();
+}
+
+if (!is_dir(TMP_DIR)) {
+    mkdir(TMP_DIR, 0777, true);
 }
 
 $obj = new SimpleXMLElement(file_get_contents($xml));
@@ -77,6 +81,7 @@ echo "********************************\n$cmd\n";
 passthru($cmd);
 echo "\n";
 
+# 清理临时文件
 unlink($mergeList);
 foreach ($files as $file) {
     unlink($file);
@@ -98,7 +103,8 @@ function pathUrlDecode($id, $url)
     if (!is_file($url) && preg_match('#%[a-f0-9]{2}#is', $url)) {
         $url = urldecode($url);
     }
-    // 转换WSL路径：C:/xxx -> /mnt/c/xxx
+
+    # 转换WSL路径：C:/xxx -> /mnt/c/xxx
     if (!is_file($url) && preg_match('#^([a-z]):(.+)$#is', $url, $opt) && is_file(WSLPATH)) {
         $url = system(WSLPATH.' '.escapeshellarg($url));
     }
